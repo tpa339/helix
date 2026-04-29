@@ -1,0 +1,24 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "HELIX_SWARM_DEFAULT": "auto",
+    "HELIX_MASTER_MODEL": "opus",
+    "HELIX_EXECUTOR_MODEL": "sonnet",
+    "HELIX_EVALUATOR_MODEL": "sonnet",
+    "HELIX_ADVISOR_MODEL": "opus",
+    "HELIX_ADVISOR_MAX_USES_PER_RUN": "2"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/safety-pretool.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
