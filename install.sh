@@ -17,7 +17,7 @@ copy_tree() {
 
 mkdir -p "$target"
 
-for dir in agents commands skills hooks scripts templates; do
+for dir in agents commands skills hooks scripts templates docs; do
   copy_tree "$dir"
 done
 
