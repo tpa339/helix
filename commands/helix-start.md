@@ -47,7 +47,7 @@ Run the full guided Helix start without requiring the user to manually call each
    - `lean`: direct implementation
    - `standard`: 2-4 bounded workers
    - `swarm`: 5-8 workers with low overlap and worktrees
-   - `workflow`: Claude Code dynamic workflow for large parallel/repeatable/adversarial work
+   - `workflow`: Helix-native workflow for large parallel/repeatable/adversarial work
    - stop for human approval if risk is high or requirements conflict
 
 ## Rules
@@ -58,4 +58,5 @@ Run the full guided Helix start without requiring the user to manually call each
 - Do not generate documents for their own sake; write compact artifacts that guide execution.
 - Use `helix-advisor` only for high-risk ambiguity or plan conflicts.
 - Use hooks as safety gates and logging, not as the primary orchestration engine.
+- Use Helix-native workflows instead of Claude Code Dynamic Workflows.
 - End with one clear next action: proceed, ask, or stop.

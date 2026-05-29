@@ -38,7 +38,7 @@ Run the `/helix-intake` logic:
 - `research`: unknown external facts, APIs, market/architecture choices, or current docs matter. Create and execute a research plan.
 - `blueprint`: enough clarity exists for PRD/SPEC/ARCHITECTURE/TEST_STRATEGY.
 - `swarm`: 3+ independent work units with low file overlap.
-- `workflow`: large parallel audit/migration/research or high-stakes adversarial validation. Ask Claude Code to create a dynamic workflow.
+- `workflow`: large parallel audit/migration/research or high-stakes adversarial validation. Use Helix-native workflows.
 
 ## Autonomy rules
 
@@ -47,5 +47,5 @@ Run the `/helix-intake` logic:
 - If asking, use numbered options plus `Eigene Antwort`.
 - Prefer the cheapest route that can produce a verifiable result.
 - Escalate to `workflow` only when parallelism or independent cross-checking materially improves outcome quality.
+- Prefer `/helix-native-workflow` over Claude Code Dynamic Workflows.
 - End every run with: route chosen, artifacts changed, verification performed, residual risk, next action.
-

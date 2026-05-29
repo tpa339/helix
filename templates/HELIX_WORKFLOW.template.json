@@ -1,0 +1,45 @@
+{
+  "name": "helix-workflow",
+  "objective": "",
+  "max_concurrency": 4,
+  "executor": {
+    "command": "claude",
+    "args": ["-p"],
+    "dry_run": true
+  },
+  "phases": [
+    {
+      "id": "orient",
+      "mode": "parallel",
+      "tasks": [
+        {
+          "id": "orient-1",
+          "role": "researcher",
+          "prompt": "Summarize the relevant repo context for this workflow."
+        }
+      ]
+    },
+    {
+      "id": "execute",
+      "mode": "parallel",
+      "tasks": [
+        {
+          "id": "execute-1",
+          "role": "implementer",
+          "prompt": "Execute one bounded work unit and return changed files plus verification."
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "mode": "parallel",
+      "tasks": [
+        {
+          "id": "review-1",
+          "role": "evaluator",
+          "prompt": "Review prior findings adversarially and list only verified issues."
+        }
+      ]
+    }
+  ]
+}

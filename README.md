@@ -9,7 +9,7 @@ Helix is a lightweight orchestration framework for Claude Code. It turns vague p
 5. `/helix-research` chooses the minimum necessary research depth.
 6. `/blueprint` creates compact PRD, SPEC, architecture, constraints, and test strategy.
 7. `/validate-plan` checks readiness before implementation.
-8. `/helix`, `/swarm`, `/helix-workflow`, `/review`, and `/ship` route execution, evaluation, and release.
+8. `/helix`, `/swarm`, `/helix-native-workflow`, `/review`, and `/ship` route execution, evaluation, and release.
 
 The framework is designed for token efficiency: global instructions stay small, durable project state lives in files, and workers receive narrow task contexts.
 
@@ -37,7 +37,7 @@ In any project:
 /helix-auto <your task>
 ```
 
-Helix will initialize `.helix/`, classify complexity, decide whether to ask, research, create a catalog, blueprint, execute directly, spawn workers, or ask Claude Code to create a dynamic workflow.
+Helix will initialize `.helix/`, classify complexity, decide whether to ask, research, create a catalog, blueprint, execute directly, spawn workers, or create a Helix-native workflow.
 
 For direct initialization without the interview:
 
@@ -57,7 +57,8 @@ For direct initialization without the interview:
 - `/validate-plan`: readiness and quality-gate check.
 - `/helix`: route an existing task through the right mode.
 - `/swarm`: deterministic multi-agent dispatch for low-overlap work.
-- `/helix-workflow`: prepare Claude Code dynamic workflows for large parallel/adversarial work.
+- `/helix-workflow`: prepare Helix-native workflows for large parallel/adversarial work.
+- `/helix-native-workflow`: create and run `.helix/workflows/*.json` with the Helix runner.
 - `/review`: independent review.
 - `/ship`: final verification and changelog discipline.
 - `/advisor`: consult the higher-intelligence advisor pattern when useful.
@@ -70,6 +71,16 @@ For direct initialization without the interview:
 - `hooks/`: safety and task guard hooks.
 - `scripts/`: bootstrap and advisor helper scripts.
 - `templates/`: project-local `.helix/` artifacts.
+
+## Helix-Native Workflows
+
+Helix does not need Claude Code Dynamic Workflows. For large parallel work, it creates a versionable workflow spec under `.helix/workflows/` and stores all prompts/results under `.helix/runs/`.
+
+```bash
+python3 ~/.claude/scripts/helix_workflow.py init --root .
+python3 ~/.claude/scripts/helix_workflow.py run --root .
+python3 ~/.claude/scripts/helix_workflow.py status --root .
+```
 
 ## What Is Intentionally Excluded
 

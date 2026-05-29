@@ -36,6 +36,7 @@ TEMPLATE_MAP = {
     "AGENT_TOPOLOGY.template.md": ".helix/specs/AGENT_TOPOLOGY.md",
     "DISPATCH_BOARD.template.md": ".helix/specs/DISPATCH_BOARD.md",
     "WORKFLOW_BRIEF.template.md": ".helix/specs/WORKFLOW_BRIEF.md",
+    "HELIX_WORKFLOW.template.json": ".helix/workflows/helix-workflow.json",
     "OVERVIEW_INDEX.template.md": ".helix/overview/INDEX.md",
     "DECISIONS.template.md": ".helix/overview/DECISIONS.md",
     "CURRENT_STATE.template.md": ".helix/overview/CURRENT_STATE.md",
@@ -79,6 +80,8 @@ def main() -> int:
         ".helix/kb/wiki",
         ".helix/overview",
         ".helix/changelog/daily",
+        ".helix/workflows",
+        ".helix/runs",
     ]:
         (root / rel).mkdir(parents=True, exist_ok=True)
 

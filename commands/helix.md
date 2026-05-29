@@ -23,5 +23,5 @@ Use Helix as the task operating system.
 3. keep worker prompts minimal
 4. use advisor only for hard ambiguity, repeated failure, or high-risk design choices
 5. require independent evaluation before integration
-6. use Claude Code dynamic workflows only for large parallel work or adversarial verification
+6. use Helix-native workflows only for large parallel work or adversarial verification
 7. end with proof, residual risk, and the next recommended action

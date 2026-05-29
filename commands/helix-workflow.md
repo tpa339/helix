@@ -1,5 +1,5 @@
 ---
-description: Escalate suitable work into a Claude Code dynamic workflow
+description: Escalate suitable work into a Helix-native workflow
 model: opus
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent
 ---
@@ -7,6 +7,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent
 # `/helix-workflow`
 
 Use when a task needs many agents, repeatable orchestration, adversarial validation, or long-running parallel work.
+This command must prefer Helix-native workflows over Claude Code Dynamic Workflows.
 
 ## Workflow candidates
 
@@ -20,9 +21,11 @@ Use when a task needs many agents, repeatable orchestration, adversarial validat
 
 1. Read `.helix/state/TASK_CARD.md`, `.helix/state/ROUTING_DECISION.md`, `WORK_UNITS.md`, and `QUALITY_GATES.md` when present.
 2. Write `.helix/specs/WORKFLOW_BRIEF.md`.
-3. Ask Claude Code to create a dynamic workflow from that brief.
-4. Require approval before launching expensive workflow runs.
-5. Make the workflow phases explicit:
+3. Create or update `.helix/workflows/helix-workflow.json`.
+4. Use `python3 ~/.claude/scripts/helix_workflow.py init --root .` if the workflow spec is missing.
+5. Keep `executor.dry_run=true` until the user approves a real run.
+6. Require approval before launching expensive workflow runs.
+7. Make the workflow phases explicit:
    - orient
    - shard
    - execute in parallel
@@ -30,7 +33,7 @@ Use when a task needs many agents, repeatable orchestration, adversarial validat
    - integrate
    - verify
    - summarize
-6. Save successful reusable workflows as project commands under `.claude/workflows/` when appropriate.
+8. Run with `python3 ~/.claude/scripts/helix_workflow.py run --root .` only after review.
+9. Summarize `.helix/runs/<run_id>/summary.json`, not every intermediate result.
 
 Do not use workflows for routine one-file work.
-

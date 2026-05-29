@@ -19,4 +19,6 @@ Project knowledge belongs in the target project's `.helix/` directory, not in gl
 
 ## Dynamic control
 
-`/helix-auto` is the preferred entrypoint. It classifies the task, writes a task card and routing decision, then selects the minimum sufficient route. Hooks are used as safety and logging gates; they do not replace slash commands or dynamic workflows for orchestration.
+`/helix-auto` is the preferred entrypoint. It classifies the task, writes a task card and routing decision, then selects the minimum sufficient route. Hooks are used as safety and logging gates; they do not replace slash commands or Helix-native workflows for orchestration.
+
+Helix-native workflows live in `.helix/workflows/*.json` and execute through `scripts/helix_workflow.py`. This keeps the orchestration inspectable, commit-friendly, and independent from Claude Code Dynamic Workflows.

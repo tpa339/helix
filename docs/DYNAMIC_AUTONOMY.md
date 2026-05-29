@@ -14,7 +14,7 @@ Use this chain for autonomous work:
 /helix-auto
   -> bootstrap .helix/
   -> /helix-intake
-  -> direct | interview | steckbrief | catalog | research | blueprint | swarm | workflow
+  -> direct | interview | steckbrief | catalog | research | blueprint | swarm | helix-native workflow
   -> verify
   -> changelog / state update
 ```
@@ -45,9 +45,9 @@ Hooks should do these things:
 
 Hooks should not silently launch expensive multi-agent work.
 
-## Dynamic workflows
+## Helix-native workflows
 
-Use Claude Code dynamic workflows when the orchestration itself should be code:
+Use Helix-native workflows when orchestration should move out of Claude's context and into a versionable project artifact:
 
 - many independent agents
 - repeatable audit or migration
@@ -55,3 +55,4 @@ Use Claude Code dynamic workflows when the orchestration itself should be code:
 - long-running work
 - intermediate results should stay out of Claude's context window
 
+The orchestration file is `.helix/workflows/helix-workflow.json`. The runner stores prompts, results, and summaries in `.helix/runs/`.
