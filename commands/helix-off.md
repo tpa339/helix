@@ -1,17 +1,35 @@
 ---
-description: Disable Helix swarm mode by updating local Claude settings
-allowed-tools: Read, Write, Edit
+description: Disable Helix live mode for the current project
+allowed-tools: Read, Write, Edit, Bash
 model: sonnet
 ---
 
 # `/helix-off`
 
-Disable default Helix swarm behavior by updating `~/.claude/settings.local.json`.
+Disable Helix live mode for the current project.
 
-Rules:
+## Required actions
 
-- preserve existing settings
-- ensure `env.HELIX_SWARM_DEFAULT` is `"0"`
-- keep `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` untouched unless the user explicitly asks to disable agent teams entirely
-- ensure the file stays valid JSON
-- do not remove unrelated keys
+Run:
+
+```bash
+rm -f .helix/workflows/APPROVED
+```
+
+Then write or update `.helix/state/PROJECT_STATE.md` with:
+
+- `helix_live_mode: disabled`
+- `workflow_approval: absent`
+- `disabled_at: <current ISO timestamp>`
+
+Append a compact entry to `.helix/changelog/CHANGELOG.md` and today's daily changelog:
+
+- Helix live mode disabled for this project.
+- Approval file removed from `.helix/workflows/APPROVED`.
+
+## Guardrails
+
+- Do not delete `.helix/workflows/helix-workflow.json`.
+- Do not delete run history.
+- Do not change global settings.
+- Do not disable Helix commands or hooks.

@@ -45,10 +45,26 @@ For direct initialization without the interview:
 /init-project
 ```
 
+To allow real project-local Helix workflow execution:
+
+```text
+/helix-on
+```
+
+This creates `.helix/workflows/APPROVED`. Real workflow runs still require the workflow spec to set `executor.dry_run` to `false`; otherwise Helix remains in safe dry-run mode.
+
+To disable project-local live execution:
+
+```text
+/helix-off
+```
+
 ## Main Commands
 
 - `/helix-start`: full autonomous project start.
 - `/helix-auto`: dynamic intake, classification, and routing.
+- `/helix-on`: enable project-local live workflow approval.
+- `/helix-off`: disable project-local live workflow approval.
 - `/helix-intake`: task card and routing decision.
 - `/interview`: numbered Material Ambiguity interview.
 - `/helix-catalog`: requirements catalog for larger initiatives.
