@@ -26,7 +26,7 @@ This command must prefer Helix-native workflows over Claude Code Dynamic Workflo
 4. Use `python3 ~/.claude/scripts/helix_workflow.py init --root .` only if no Helix artifacts exist yet.
 5. Keep `executor.dry_run=true` until the user approves a real run.
 6. Require approval before launching expensive workflow runs.
-7. Make the generated workflow situational, not fixed: infer roles, milestones, concurrency, iteration count, task effort, and model tier from the current artifacts.
+7. Make the generated workflow situational, not fixed: infer roles, milestones, concurrency, iteration count, task effort, model tier, required skills, subagent need, worktree isolation, and workflow pattern from the current artifacts.
 8. Run with `python3 ~/.claude/scripts/helix_workflow.py run --root .` only after review.
 9. Summarize `.helix/runs/<run_id>/summary.json`, not every intermediate result.
 10. Stop only when target state is reached, max iterations are exhausted, or blockers are documented in `.helix/runs/<run_id>/blockers.json`.
@@ -39,5 +39,6 @@ This command must prefer Helix-native workflows over Claude Code Dynamic Workflo
 
 The runner writes the selected model into every task result, so cost decisions remain auditable.
 Every generated task should carry an `effort` block with score, size, model tier, and review depth. Use that effort block for dispatch and escalation decisions instead of treating the whole project as uniformly complex.
+Every generated task should also carry an `execution_plan` block. Use it to decide if the task stays in the main context, runs as a separate subagent, or needs a worktree.
 
 Do not use workflows for routine one-file work.

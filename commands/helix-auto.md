@@ -51,4 +51,7 @@ Run the `/helix-intake` logic:
 - If the user asks to work through a project plan or milestones autonomously, route to `workflow`.
 - For `workflow`, call `helix_workflow.py plan --root . --force` so roles, concurrency, iterations, and model tiers are generated from the actual project state.
 - Use the cheapest sufficient model tier: low-risk repetitive work on cheap tier, normal implementation on standard tier, architecture/release-gate/high-risk review on strong tier.
+- For every non-trivial work unit, classify required skills and whether a separate subagent/worktree is needed.
+- Prefer direct bounded execution for small local work; use subagents for research, adversarial review, tests, high-risk work, fan-out, tournaments, or hypothesis loops.
+- Use these Helix patterns when appropriate: `classify-and-act`, `fan-out-and-synthesize`, `adversarial-verification`, `generate-and-filter`, `tournament`, `hypothesis-refute-loop`, `direct-bounded`.
 - End every run with: route chosen, artifacts changed, verification performed, residual risk, next action.

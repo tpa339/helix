@@ -53,6 +53,35 @@ DEFAULT_SPEC = {
             {"max_score": 99, "model": "opus"},
         ],
     },
+    "skill_policy": {
+        "default": ["bounded-implementation", "verification"],
+        "rules": [
+            {
+                "skill": "frontend",
+                "keywords": ["frontend", "ui", "css", "component", "browser", "react", "svelte", "vue"],
+            },
+            {
+                "skill": "backend",
+                "keywords": ["backend", "api", "server", "database", "auth", "service", "migration"],
+            },
+            {
+                "skill": "testing",
+                "keywords": ["test", "verify", "playwright", "e2e", "regression", "unit"],
+            },
+            {
+                "skill": "security-review",
+                "keywords": ["security", "auth", "secret", "privacy", "permission", "compliance"],
+            },
+            {
+                "skill": "research",
+                "keywords": ["research", "docs", "current", "latest", "benchmark", "compare"],
+            },
+            {
+                "skill": "refactor-migration",
+                "keywords": ["refactor", "migration", "rename", "move", "rewrite", "codemod"],
+            },
+        ],
+    },
     "executor": {
         "command": "claude",
         "args": ["-p"],
@@ -271,7 +300,81 @@ def score_task_effort(text: str, role: str = "worker") -> dict[str, Any]:
         "suggested_review": "release-gate"
         if role == "release-gate" or base["risk"] >= 3
         else ("adversarial" if score >= 6 else "standard"),
-        "suggested_model_tier": "strong" if score >= 9 or role in {"release-gate", "review-agent"} else ("standard" if score >= 3 else "cheap"),
+        "suggested_model_tier": "strong"
+        if score >= 9 or role in {"release-gate", "review-agent"}
+        else ("standard" if score >= 3 or role == "test-agent" else "cheap"),
+    }
+
+
+def infer_required_skills(text: str, role: str, skill_policy: dict[str, Any] | None = None) -> list[str]:
+    policy = skill_policy or DEFAULT_SPEC.get("skill_policy", {})
+    lower = text.lower()
+    skills = set(policy.get("default", []))
+    role_skills = {
+        "frontend-dev": ["frontend", "browser-verification"],
+        "backend-dev": ["backend", "contract-verification"],
+        "test-agent": ["testing", "regression"],
+        "review-agent": ["adversarial-review", "risk-analysis"],
+        "release-gate": ["release-gate", "security-review"],
+        "researcher": ["research", "source-triage"],
+    }
+    skills.update(role_skills.get(role, []))
+    for rule in policy.get("rules", []):
+        if count_keywords(lower, rule.get("keywords", [])):
+            skills.add(rule.get("skill", ""))
+    return sorted(skill for skill in skills if skill)
+
+
+def infer_workflow_pattern(text: str, effort: dict[str, Any], role: str) -> str:
+    lower = text.lower()
+    if count_keywords(lower, ["rank", "sort", "top", "best", "compare candidates", "candidate"]):
+        return "tournament"
+    if count_keywords(lower, ["brainstorm", "generate", "ideas", "names", "options"]):
+        return "generate-and-filter"
+    if count_keywords(lower, ["root cause", "hypothesis", "flaky", "intermittent", "incident"]):
+        return "hypothesis-refute-loop"
+    if count_keywords(lower, ["verify every", "claims", "audit", "security", "review"]) or role in {"review-agent", "release-gate"}:
+        return "adversarial-verification"
+    if count_keywords(lower, ["many", "all files", "migration", "rename", "refactor", "parallel"]):
+        return "fan-out-and-synthesize"
+    if effort.get("effort") in {"l", "xl"} or effort.get("ambiguity", 0) >= 2:
+        return "classify-and-act"
+    return "direct-bounded"
+
+
+def infer_execution_plan(text: str, role: str, effort: dict[str, Any], skill_policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    pattern = infer_workflow_pattern(text, effort, role)
+    skills = infer_required_skills(text, role, skill_policy)
+    use_subagent = pattern != "direct-bounded" or effort.get("score", 0) >= 4 or role in {
+        "researcher",
+        "review-agent",
+        "release-gate",
+        "test-agent",
+    }
+    worktree = bool(
+        use_subagent
+        and (
+            role in {"frontend-dev", "backend-dev", "worker"}
+            or pattern in {"fan-out-and-synthesize", "hypothesis-refute-loop"}
+        )
+        and effort.get("risk", 0) >= 1
+    )
+    stop_condition = {
+        "direct-bounded": "task proof is recorded and no acceptance criterion is unresolved",
+        "classify-and-act": "classifier route is chosen and routed task proof passes",
+        "fan-out-and-synthesize": "all shards have pass/block status and synthesis resolves conflicts",
+        "adversarial-verification": "verifier finds no unhandled blocker against the rubric",
+        "generate-and-filter": "rubric-filtered shortlist is deduped and justified",
+        "tournament": "winner or top set survives pairwise judging",
+        "hypothesis-refute-loop": "one hypothesis is proven or all viable hypotheses are refuted",
+    }.get(pattern, "task proof is recorded")
+    return {
+        "pattern": pattern,
+        "required_skills": skills,
+        "use_subagent": use_subagent,
+        "use_worktree": worktree,
+        "isolation": "worktree" if worktree else ("separate-context" if use_subagent else "main-context"),
+        "stop_condition": stop_condition,
     }
 
 
@@ -323,7 +426,7 @@ def infer_role(text: str) -> str:
     return "worker"
 
 
-def extract_work_units(markdown: str) -> list[dict[str, Any]]:
+def extract_work_units(markdown: str, skill_policy: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     units: list[dict[str, Any]] = []
     for unit_id, section in split_sections(markdown, r"^##\s+(U-\d{3})\s*$"):
         prompt = field_value(section, "intent") or field_value(section, "purpose") or section.splitlines()[0:1]
@@ -333,6 +436,7 @@ def extract_work_units(markdown: str) -> list[dict[str, Any]]:
         suggested_role = field_value(section, "suggested_worker_role")
         role = suggested_role if suggested_role else infer_role(section)
         effort = score_task_effort(section, role)
+        execution_plan = infer_execution_plan(section, role, effort, skill_policy)
         units.append(
             {
                 "id": unit_id.lower(),
@@ -340,6 +444,7 @@ def extract_work_units(markdown: str) -> list[dict[str, Any]]:
                 "prompt": prompt or f"Complete work unit {unit_id}.",
                 "verification": verification,
                 "effort": effort,
+                "execution_plan": execution_plan,
                 "section": section,
             }
         )
@@ -406,7 +511,8 @@ def init_spec(path: Path, force: bool) -> int:
 
 
 def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]) -> list[dict[str, Any]]:
-    units = extract_work_units(context.get("work_units", ""))
+    skill_policy = DEFAULT_SPEC.get("skill_policy", {})
+    units = extract_work_units(context.get("work_units", ""), skill_policy)
     roadmap_milestones = extract_milestones(context.get("roadmap", ""))
     source_text = "\n\n".join(context.values()).strip()
     objective = first_nonempty_line(
@@ -432,6 +538,12 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                 "verification": "Run the smallest meaningful verification for this slice.",
                 "section": source_text,
                 "effort": score_task_effort(source_text, role),
+                "execution_plan": infer_execution_plan(
+                    source_text,
+                    role,
+                    score_task_effort(source_text, role),
+                    skill_policy,
+                ),
             }
             for index, role in enumerate(dict.fromkeys(inferred_roles))
         ]
@@ -455,11 +567,14 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                 "id": f"{milestone['id']}-{unit['id']}",
                 "role": unit["role"],
                 "effort": unit.get("effort", {}),
+                "execution_plan": unit.get("execution_plan", {}),
                 "prompt": "\n".join(
                     [
                         f"Milestone goal: {milestone['goal']}",
                         f"Work unit: {unit['id']}",
                         f"Effort: {(unit.get('effort') or {}).get('effort', 'unknown')} / score {(unit.get('effort') or {}).get('score', 'unknown')}",
+                        f"Pattern: {(unit.get('execution_plan') or {}).get('pattern', 'direct-bounded')}",
+                        f"Skills: {', '.join((unit.get('execution_plan') or {}).get('required_skills', [])) or 'default'}",
                         f"Task: {unit['prompt']}",
                         f"Verification intent: {unit.get('verification') or 'Verify against acceptance criteria.'}",
                     ]
@@ -475,6 +590,15 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                     f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
                     "test-agent",
                 ),
+                "execution_plan": infer_execution_plan(
+                    f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
+                    "test-agent",
+                    score_task_effort(
+                        f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
+                        "test-agent",
+                    ),
+                    skill_policy,
+                ),
                 "prompt": f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
             }
         ]
@@ -486,6 +610,15 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                     "effort": score_task_effort(
                         f"Release gate for {milestone['id']}: {milestone.get('acceptance') or milestone['goal']}",
                         "release-gate",
+                    ),
+                    "execution_plan": infer_execution_plan(
+                        f"Release gate for {milestone['id']}: {milestone.get('acceptance') or milestone['goal']}",
+                        "release-gate",
+                        score_task_effort(
+                            f"Release gate for {milestone['id']}: {milestone.get('acceptance') or milestone['goal']}",
+                            "release-gate",
+                        ),
+                        skill_policy,
                     ),
                     "prompt": f"Perform adversarial release-gate review for milestone {milestone['id']}. Block if unresolved high-risk issues remain.",
                 }
@@ -566,6 +699,8 @@ def render_prompt(
     role = task.get("role", "worker")
     agent = spec.get("agents", {}).get(role, {})
     skills = ", ".join(agent.get("skills", [])) or "none specified"
+    execution_plan = task.get("execution_plan") or {}
+    required_skills = ", ".join(execution_plan.get("required_skills", [])) or skills
     prior_paths = "\n".join(f"- {r['result_path']}" for r in prior_results or [])
     return "\n".join(
         [
@@ -577,6 +712,11 @@ def render_prompt(
             f"Role: {role}",
             f"Role mission: {agent.get('mission', '')}",
             f"Relevant skills: {skills}",
+            f"Required task skills: {required_skills}",
+            f"Workflow pattern: {execution_plan.get('pattern', 'direct-bounded')}",
+            f"Use subagent: {execution_plan.get('use_subagent', False)}",
+            f"Isolation: {execution_plan.get('isolation', 'main-context')}",
+            f"Stop condition: {execution_plan.get('stop_condition', 'task proof is recorded')}",
             f"Task effort: {(task.get('effort') or {}).get('effort', 'unknown')} / score {(task.get('effort') or {}).get('score', 'unknown')}",
             f"Review depth: {(task.get('effort') or {}).get('suggested_review', 'standard')}",
             f"Milestone: {phase.get('milestone_id', '')}",
@@ -663,6 +803,7 @@ def run_task(
         "role": task.get("role", "worker"),
         "model": selected_model,
         "effort": task.get("effort", {}),
+        "execution_plan": task.get("execution_plan", {}),
         "status": parse_status(output, returncode),
         "returncode": returncode,
         "started_at": started,

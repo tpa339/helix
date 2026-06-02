@@ -31,6 +31,35 @@
       {"max_score": 99, "model": "opus"}
     ]
   },
+  "skill_policy": {
+    "default": ["bounded-implementation", "verification"],
+    "rules": [
+      {
+        "skill": "frontend",
+        "keywords": ["frontend", "ui", "css", "component", "browser", "react", "svelte", "vue"]
+      },
+      {
+        "skill": "backend",
+        "keywords": ["backend", "api", "server", "database", "auth", "service", "migration"]
+      },
+      {
+        "skill": "testing",
+        "keywords": ["test", "verify", "playwright", "e2e", "regression", "unit"]
+      },
+      {
+        "skill": "security-review",
+        "keywords": ["security", "auth", "secret", "privacy", "permission", "compliance"]
+      },
+      {
+        "skill": "research",
+        "keywords": ["research", "docs", "current", "latest", "benchmark", "compare"]
+      },
+      {
+        "skill": "refactor-migration",
+        "keywords": ["refactor", "migration", "rename", "move", "rewrite", "codemod"]
+      }
+    ]
+  },
   "executor": {
     "command": "claude",
     "args": ["-p"],

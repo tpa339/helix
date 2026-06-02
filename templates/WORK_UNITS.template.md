@@ -12,6 +12,11 @@
 - effort_size: # xs|s|m|l|xl
 - suggested_model_tier: # cheap|standard|strong
 - review_depth: # standard|adversarial|release-gate
+- workflow_pattern: # direct-bounded|classify-and-act|fan-out-and-synthesize|adversarial-verification|generate-and-filter|tournament|hypothesis-refute-loop
+- required_skills:
+- use_subagent:
+- use_worktree:
+- stop_condition:
 - token_budget:
 - time_budget_minutes:
 - verification:

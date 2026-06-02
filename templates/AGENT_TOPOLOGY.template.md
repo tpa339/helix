@@ -4,6 +4,8 @@
 - active_master:
 - advisor_enabled:
 - worker_count:
+- workflow_patterns:
+- skill_policy:
 
 ## Roles
 
@@ -18,6 +20,9 @@
 - role:
 - model:
 - unit:
+- pattern:
+- required_skills:
+- use_subagent:
 - worktree:
 - branch:
 - handoff_to:
@@ -27,6 +32,9 @@
 - role:
 - model:
 - unit:
+- pattern:
+- required_skills:
+- use_subagent:
 - worktree:
 - branch:
 - handoff_to:

@@ -8,6 +8,10 @@
 - assigned_worker:
 - dependencies:
 - files_scope:
+- workflow_pattern:
+- required_skills:
+- use_subagent:
+- isolation:
 - verification_gate:
 - integration_order:
 
@@ -17,6 +21,10 @@
 - assigned_worker:
 - dependencies:
 - files_scope:
+- workflow_pattern:
+- required_skills:
+- use_subagent:
+- isolation:
 - verification_gate:
 - integration_order:
 
