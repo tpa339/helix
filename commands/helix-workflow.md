@@ -16,6 +16,7 @@ This command must prefer Helix-native workflows over Claude Code Dynamic Workflo
 - research questions that need independent source cross-checking
 - high-stakes plans that need several independent drafts and refutation
 - repeated CI/test-fix loops across independent failures
+- project plans with milestones that should be worked until accepted
 
 ## Required behavior
 
@@ -28,12 +29,13 @@ This command must prefer Helix-native workflows over Claude Code Dynamic Workflo
 7. Make the workflow phases explicit:
    - orient
    - shard
-   - execute in parallel
-   - adversarial review
-   - integrate
-   - verify
-   - summarize
+   - execute milestone tasks in parallel
+   - test with `test-agent`
+   - repair and retry when tests fail
+   - adversarial review or release gate
+   - integrate and summarize
 8. Run with `python3 ~/.claude/scripts/helix_workflow.py run --root .` only after review.
 9. Summarize `.helix/runs/<run_id>/summary.json`, not every intermediate result.
+10. Stop only when target state is reached, max iterations are exhausted, or blockers are documented in `.helix/runs/<run_id>/blockers.json`.
 
 Do not use workflows for routine one-file work.

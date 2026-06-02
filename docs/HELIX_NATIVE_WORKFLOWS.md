@@ -29,6 +29,27 @@ scripts/helix_workflow.py # runner
 4. Set `executor.dry_run=false` for real execution.
 5. `helix_workflow.py run` executes phases and stores outputs under `.helix/runs/`.
 
+## Milestone mode
+
+Project plans should be converted into `milestones[]`:
+
+```json
+{
+  "id": "m1",
+  "goal": "Implement login MVP",
+  "acceptance": ["User can log in", "Invalid credentials show an error"],
+  "tasks": [
+    {"id": "m1-frontend", "role": "frontend-dev", "prompt": "..."},
+    {"id": "m1-backend", "role": "backend-dev", "prompt": "..."}
+  ],
+  "tests": [
+    {"id": "m1-test", "role": "test-agent", "prompt": "..."}
+  ]
+}
+```
+
+The runner executes implementation tasks, then test tasks. If tests fail, it runs repair tasks and repeats until the milestone passes, `max_iterations` is exhausted, or an agent returns `HELIX_STATUS: blocked`.
+
 ## Current limitation
 
 The first runner uses the local `claude -p` CLI as an executor when `dry_run=false`. It is intentionally simple. Future versions can add:

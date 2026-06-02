@@ -75,6 +75,7 @@ For direct initialization without the interview:
 ## Helix-Native Workflows
 
 Helix does not need Claude Code Dynamic Workflows. For large parallel work, it creates a versionable workflow spec under `.helix/workflows/` and stores all prompts/results under `.helix/runs/`.
+For project plans, Helix converts milestones into role-based tasks, runs implementers and test agents, retries failed milestones, and stops only when the target state is reached or blockers are documented.
 
 ```bash
 python3 ~/.claude/scripts/helix_workflow.py init --root .

@@ -48,4 +48,5 @@ Run the `/helix-intake` logic:
 - Prefer the cheapest route that can produce a verifiable result.
 - Escalate to `workflow` only when parallelism or independent cross-checking materially improves outcome quality.
 - Prefer `/helix-native-workflow` over Claude Code Dynamic Workflows.
+- If the user asks to work through a project plan or milestones autonomously, route to `workflow`.
 - End every run with: route chosen, artifacts changed, verification performed, residual risk, next action.

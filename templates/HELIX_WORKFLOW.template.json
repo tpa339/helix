@@ -1,12 +1,58 @@
 {
   "name": "helix-workflow",
   "objective": "",
+  "target_state": "",
   "max_concurrency": 4,
+  "max_iterations": 3,
   "executor": {
     "command": "claude",
     "args": ["-p"],
     "dry_run": true
   },
+  "agents": {
+    "frontend-dev": {
+      "skills": ["ui", "accessibility", "browser-verification"],
+      "mission": "Implement bounded frontend/UI work and verify visible behavior."
+    },
+    "backend-dev": {
+      "skills": ["api", "data-modeling", "integration"],
+      "mission": "Implement bounded backend/API/data work and verify contracts."
+    },
+    "test-agent": {
+      "skills": ["unit-tests", "integration-tests", "regression"],
+      "mission": "Prove the milestone works against acceptance criteria."
+    },
+    "review-agent": {
+      "skills": ["code-review", "risk-analysis", "adversarial-testing"],
+      "mission": "Challenge implementation quality and surface blockers."
+    }
+  },
+  "milestones": [
+    {
+      "id": "m1",
+      "goal": "Reach the first verifiable project milestone.",
+      "acceptance": ["All scoped checks pass.", "No known critical blocker remains."],
+      "tasks": [
+        {
+          "id": "m1-frontend",
+          "role": "frontend-dev",
+          "prompt": "Implement the frontend part of milestone m1 if applicable."
+        },
+        {
+          "id": "m1-backend",
+          "role": "backend-dev",
+          "prompt": "Implement the backend part of milestone m1 if applicable."
+        }
+      ],
+      "tests": [
+        {
+          "id": "m1-test",
+          "role": "test-agent",
+          "prompt": "Test milestone m1 against its acceptance criteria."
+        }
+      ]
+    }
+  ],
   "phases": [
     {
       "id": "orient",
