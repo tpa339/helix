@@ -235,6 +235,46 @@ def score_complexity(text: str) -> dict[str, Any]:
     }
 
 
+def score_task_effort(text: str, role: str = "worker") -> dict[str, Any]:
+    """Score one work unit so the orchestrator can right-size model and review depth."""
+    base = score_complexity(text)
+    role_weight = {
+        "review-agent": 2,
+        "release-gate": 3,
+        "backend-dev": 1,
+        "frontend-dev": 1,
+        "test-agent": 1,
+        "researcher": 1,
+        "worker": 0,
+    }.get(role, 0)
+    file_count = len(re.findall(r"[\w./-]+\.(ts|tsx|js|jsx|py|go|rs|swift|md|json|yaml|yml)", text))
+    dependency_count = len(re.findall(r"\bU-\d{3}\b", text))
+    score = base["ambiguity"] + base["risk"] + base["novelty"] + base["verification_difficulty"]
+    score += clamp(file_count // 4, 0, 2) + clamp(dependency_count, 0, 2) + role_weight
+
+    effort = "xs"
+    if score >= 12:
+        effort = "xl"
+    elif score >= 9:
+        effort = "l"
+    elif score >= 6:
+        effort = "m"
+    elif score >= 3:
+        effort = "s"
+
+    return {
+        "score": score,
+        "effort": effort,
+        "risk": base["risk"],
+        "ambiguity": base["ambiguity"],
+        "verification_difficulty": base["verification_difficulty"],
+        "suggested_review": "release-gate"
+        if role == "release-gate" or base["risk"] >= 3
+        else ("adversarial" if score >= 6 else "standard"),
+        "suggested_model_tier": "strong" if score >= 9 or role in {"release-gate", "review-agent"} else ("standard" if score >= 3 else "cheap"),
+    }
+
+
 def collect_project_context(root: Path) -> dict[str, str]:
     files = {
         "task_card": ".helix/state/TASK_CARD.md",
@@ -292,12 +332,14 @@ def extract_work_units(markdown: str) -> list[dict[str, Any]]:
         verification = field_value(section, "verification")
         suggested_role = field_value(section, "suggested_worker_role")
         role = suggested_role if suggested_role else infer_role(section)
+        effort = score_task_effort(section, role)
         units.append(
             {
                 "id": unit_id.lower(),
                 "role": role,
                 "prompt": prompt or f"Complete work unit {unit_id}.",
                 "verification": verification,
+                "effort": effort,
                 "section": section,
             }
         )
@@ -327,12 +369,16 @@ def select_model(spec: dict[str, Any], phase: dict[str, Any], task: dict[str, An
         return str(task["model"])
     policy = spec.get("model_policy", {})
     role = task.get("role", "worker")
+    effort = task.get("effort") or {}
+    tier = effort.get("suggested_model_tier")
+    if tier and tier in policy:
+        return str(policy[tier])
     role_default = policy.get("role_defaults", {}).get(role)
     score = int((spec.get("complexity") or {}).get("score") or 0)
     selected = role_default or model_for_score(policy, score)
 
     if (spec.get("complexity") or {}).get("level") in {"high", "critical"}:
-        if role in {"review-agent", "release-gate"} or phase.get("id", "").endswith("-test"):
+        if role in {"review-agent", "release-gate"}:
             selected = str(policy.get("strong", "opus"))
     return str(selected or policy.get("default", "sonnet"))
 
@@ -385,6 +431,7 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                 "prompt": f"Execute the {role} slice needed for: {objective}",
                 "verification": "Run the smallest meaningful verification for this slice.",
                 "section": source_text,
+                "effort": score_task_effort(source_text, role),
             }
             for index, role in enumerate(dict.fromkeys(inferred_roles))
         ]
@@ -407,10 +454,12 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
             {
                 "id": f"{milestone['id']}-{unit['id']}",
                 "role": unit["role"],
+                "effort": unit.get("effort", {}),
                 "prompt": "\n".join(
                     [
                         f"Milestone goal: {milestone['goal']}",
                         f"Work unit: {unit['id']}",
+                        f"Effort: {(unit.get('effort') or {}).get('effort', 'unknown')} / score {(unit.get('effort') or {}).get('score', 'unknown')}",
                         f"Task: {unit['prompt']}",
                         f"Verification intent: {unit.get('verification') or 'Verify against acceptance criteria.'}",
                     ]
@@ -422,6 +471,10 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
             {
                 "id": f"{milestone['id']}-test",
                 "role": "test-agent",
+                "effort": score_task_effort(
+                    f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
+                    "test-agent",
+                ),
                 "prompt": f"Verify milestone {milestone['id']} against: {milestone.get('acceptance') or milestone['goal']}",
             }
         ]
@@ -430,6 +483,10 @@ def build_dynamic_milestones(context: dict[str, str], complexity: dict[str, Any]
                 {
                     "id": f"{milestone['id']}-release-gate",
                     "role": "release-gate",
+                    "effort": score_task_effort(
+                        f"Release gate for {milestone['id']}: {milestone.get('acceptance') or milestone['goal']}",
+                        "release-gate",
+                    ),
                     "prompt": f"Perform adversarial release-gate review for milestone {milestone['id']}. Block if unresolved high-risk issues remain.",
                 }
             )
@@ -520,6 +577,8 @@ def render_prompt(
             f"Role: {role}",
             f"Role mission: {agent.get('mission', '')}",
             f"Relevant skills: {skills}",
+            f"Task effort: {(task.get('effort') or {}).get('effort', 'unknown')} / score {(task.get('effort') or {}).get('score', 'unknown')}",
+            f"Review depth: {(task.get('effort') or {}).get('suggested_review', 'standard')}",
             f"Milestone: {phase.get('milestone_id', '')}",
             "",
             "Task:",
@@ -603,6 +662,7 @@ def run_task(
         "milestone_id": phase.get("milestone_id"),
         "role": task.get("role", "worker"),
         "model": selected_model,
+        "effort": task.get("effort", {}),
         "status": parse_status(output, returncode),
         "returncode": returncode,
         "started_at": started,
