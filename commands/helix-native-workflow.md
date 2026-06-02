@@ -23,6 +23,10 @@ Initialize a workflow spec:
 
 `python3 ~/.claude/scripts/helix_workflow.py init --root .`
 
+Generate a dynamic workflow spec from current Helix artifacts:
+
+`python3 ~/.claude/scripts/helix_workflow.py plan --root . --force`
+
 Run a workflow:
 
 `python3 ~/.claude/scripts/helix_workflow.py run --root .`
@@ -34,16 +38,28 @@ Show latest run status:
 ## Required behavior
 
 1. Read `.helix/state/TASK_CARD.md`, `.helix/state/ROUTING_DECISION.md`, and `.helix/specs/WORKFLOW_BRIEF.md`.
-2. Generate or update `.helix/workflows/helix-workflow.json`.
+2. Run `python3 ~/.claude/scripts/helix_workflow.py plan --root . --force` to generate `.helix/workflows/helix-workflow.json` from the current project artifacts.
 3. Shard work into phases and tasks.
 4. Map each task to a role such as `frontend-dev`, `backend-dev`, `test-agent`, `review-agent`, or a project-specific role.
 5. Model project plans as `milestones[]` with `tasks[]`, `tests[]`, optional `repair_tasks[]`, and acceptance criteria.
 6. Set `executor.dry_run=true` until the user approves a real run.
-7. Use bounded `max_concurrency`; default to 4 unless there is a reason to increase.
-8. Put testing and adversarial review in separate phases.
-9. Never put secrets or full private logs into task prompts.
-10. Run the workflow only after explaining expected cost/risk.
-11. Continue iterations until `target_state` is reached, `max_iterations` is exhausted, or a blocker is documented.
+7. Let the generated `complexity` block determine `max_concurrency`, `max_iterations`, and research depth.
+8. Let `model_policy` select the cheapest sufficient model per task: Haiku-style cheap work for low-risk repetitive tasks, Sonnet-style execution for normal implementation, Opus-style review/release-gate/advisor work for high-risk or architectural decisions.
+9. Put testing and adversarial review in separate phases.
+10. Never put secrets or full private logs into task prompts.
+11. Run the workflow only after explaining expected cost/risk.
+12. Continue iterations until `target_state` is reached, `max_iterations` is exhausted, or a blocker is documented.
+
+## Dynamic execution rule
+
+When the user says something like "arbeite den Projektplan mit Meilensteinen ab", do not ask the user to run several commands. Execute this sequence yourself:
+
+1. `python3 ~/.claude/scripts/helix_bootstrap.py --root .`
+2. `python3 ~/.claude/scripts/helix_workflow.py plan --root . --force`
+3. inspect `.helix/workflows/helix-workflow.json`
+4. keep dry run unless the user approved a real run or `.helix/workflows/APPROVED` exists
+5. `python3 ~/.claude/scripts/helix_workflow.py run --root .`
+6. summarize only `.helix/runs/<run_id>/summary.json`
 
 ## When to use
 

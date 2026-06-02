@@ -49,4 +49,6 @@ Run the `/helix-intake` logic:
 - Escalate to `workflow` only when parallelism or independent cross-checking materially improves outcome quality.
 - Prefer `/helix-native-workflow` over Claude Code Dynamic Workflows.
 - If the user asks to work through a project plan or milestones autonomously, route to `workflow`.
+- For `workflow`, call `helix_workflow.py plan --root . --force` so roles, concurrency, iterations, and model tiers are generated from the actual project state.
+- Use the cheapest sufficient model tier: low-risk repetitive work on cheap tier, normal implementation on standard tier, architecture/release-gate/high-risk review on strong tier.
 - End every run with: route chosen, artifacts changed, verification performed, residual risk, next action.

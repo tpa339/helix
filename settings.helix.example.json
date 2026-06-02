@@ -16,6 +16,10 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/safety-pretool.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/helix-workflow-guard.sh"
           }
         ]
       }

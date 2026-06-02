@@ -4,6 +4,33 @@
   "target_state": "",
   "max_concurrency": 4,
   "max_iterations": 3,
+  "complexity": {
+    "level": "auto",
+    "score": null,
+    "research_depth": "auto",
+    "risk": "auto"
+  },
+  "model_policy": {
+    "default": "sonnet",
+    "cheap": "haiku",
+    "standard": "sonnet",
+    "strong": "opus",
+    "model_arg": "--model",
+    "role_defaults": {
+      "frontend-dev": "sonnet",
+      "backend-dev": "sonnet",
+      "test-agent": "sonnet",
+      "review-agent": "opus",
+      "release-gate": "opus",
+      "researcher": "sonnet",
+      "worker": "sonnet"
+    },
+    "complexity_bands": [
+      {"max_score": 5, "model": "haiku"},
+      {"max_score": 12, "model": "sonnet"},
+      {"max_score": 99, "model": "opus"}
+    ]
+  },
   "executor": {
     "command": "claude",
     "args": ["-p"],
@@ -25,6 +52,18 @@
     "review-agent": {
       "skills": ["code-review", "risk-analysis", "adversarial-testing"],
       "mission": "Challenge implementation quality and surface blockers."
+    },
+    "release-gate": {
+      "skills": ["integration-review", "risk-control", "acceptance"],
+      "mission": "Decide if the milestone is safe to integrate or must return to repair."
+    },
+    "researcher": {
+      "skills": ["source-triage", "fact-checking", "synthesis"],
+      "mission": "Resolve only the research uncertainty needed for execution."
+    },
+    "worker": {
+      "skills": ["bounded-implementation", "verification", "handoff"],
+      "mission": "Complete a bounded work unit with minimal context and clear evidence."
     }
   },
   "milestones": [
