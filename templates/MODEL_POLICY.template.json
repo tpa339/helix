@@ -1,0 +1,31 @@
+{
+  "cheap": "haiku",
+  "standard": "sonnet",
+  "strong": "opus",
+  "model_arg": "--model",
+  "role_floor": {
+    "worker": "cheap",
+    "frontend-dev": "standard",
+    "backend-dev": "standard",
+    "test-agent": "standard",
+    "researcher": "standard",
+    "review-agent": "strong",
+    "release-gate": "strong",
+    "advisor": "strong"
+  },
+  "effort_bands": [
+    {"max_score": 2, "tier": "cheap"},
+    {"max_score": 8, "tier": "standard"},
+    {"max_score": 99, "tier": "strong"}
+  ],
+  "escalation": {
+    "failures_to_escalate": 2,
+    "security_keywords_force_strong": true,
+    "release_gate_force_strong": true,
+    "advisor_max_uses": 2
+  },
+  "context": {
+    "split_above_tokens": 50000,
+    "strong_synthesis_above_shards": 6
+  }
+}

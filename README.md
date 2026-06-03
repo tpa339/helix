@@ -99,6 +99,12 @@ python3 ~/.claude/scripts/helix_workflow.py run --root .
 python3 ~/.claude/scripts/helix_workflow.py status --root .
 ```
 
+## Roadmap
+
+- `docs/HELIX_EXPANSION_PLAN.md`: six near-term expansion stages.
+- `docs/MODEL_EFFORT_ROUTING.md`: model-tier and effort-routing policy for token-efficient execution.
+- `templates/MODEL_POLICY.template.json`: machine-readable model policy seed.
+
 ## What Is Intentionally Excluded
 
 - Personal `CLAUDE.md`.
