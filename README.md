@@ -66,6 +66,7 @@ To disable project-local live execution:
 - `/helix-on`: enable project-local live workflow approval.
 - `/helix-off`: disable project-local live workflow approval.
 - `/helix-processes`: inspect or stop long-running pytest processes.
+- `/helix-trust-project`: reduce confirmations for safe project-local routine commands.
 - `/helix-intake`: task card and routing decision.
 - `/interview`: numbered Material Ambiguity interview.
 - `/helix-catalog`: requirements catalog for larger initiatives.
