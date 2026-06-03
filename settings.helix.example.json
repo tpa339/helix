@@ -20,6 +20,10 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/helix-workflow-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/resource-guard.sh"
           }
         ]
       }
